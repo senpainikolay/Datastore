@@ -1,0 +1,9 @@
+{  
+    "http_port" : "8080", 
+    "tcp_address" : "localhost:3333",  
+    "leader_bool" : false, 
+    "tcp_cluster_servers": { 
+        "1" : "localhost:3333", 
+        "2" : "localhost:3334" 
+    }
+}
