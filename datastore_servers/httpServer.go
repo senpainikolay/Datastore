@@ -26,14 +26,43 @@ func GetRouter(m map[int]string) *mux.Router {
 	serversMap = m
 	r := mux.NewRouter()
 	r.HandleFunc("/read/{key}", GetValue).Methods("GET")
+	r.HandleFunc("/delete/{key}", DeleteValue).Methods("DELETE")
 	r.HandleFunc("/create/{key}/{value}", PostValue).Methods("POST")
+	r.HandleFunc("/update/{key}/{value}", UpdateValue).Methods("PUT")
 	return r
 }
 
 func GetValue(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
-	resp := DialTCPServer(serversMap[1], key, "NONE", "GET")
+	var resp string
+	for i := 1; i <= len(serversMap); i++ {
+		resp = DialTCPServer(serversMap[i], key, "NONE", "GET")
+		if resp != "NOTFOUND" {
+			break
+		}
+	}
+	fmt.Fprint(w, resp)
+
+}
+func DeleteValue(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	var resp string
+	for i := 1; i <= len(serversMap); i++ {
+		resp += DialTCPServer(serversMap[i], key, "NONE", "DELETE")
+	}
+	fmt.Fprint(w, resp)
+}
+
+func UpdateValue(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	val := vars["value"]
+	var resp string
+	for i := 1; i <= len(serversMap); i++ {
+		resp = DialTCPServer(serversMap[i], key, val, "PUT")
+	}
 	fmt.Fprint(w, resp)
 
 }

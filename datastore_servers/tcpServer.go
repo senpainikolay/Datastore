@@ -46,12 +46,26 @@ func handleRequest(conn net.Conn, tcp_addr string) {
 	var resp string
 	switch msg.Cmd {
 	case "POST":
-		log.Println("OOOKK")
 		Map.Store(msg.Key, msg.Val)
+		resp = fmt.Sprintf("Added/Posted at %v", tcp_addr)
+
 	case "GET":
 		storeVal, ok := Map.Load(msg.Key)
 		if ok {
 			resp = fmt.Sprint(storeVal)
+		} else {
+			resp = "NOTFOUND"
+		}
+	case "DELETE":
+		_, ok := Map.Load(msg.Key)
+		if ok {
+			Map.Delete(msg.Key)
+			resp = fmt.Sprintf("Deleted at %v", tcp_addr)
+		}
+	case "PUT":
+		_, ok := Map.Load(msg.Key)
+		if ok {
+			Map.Store(msg.Key, msg.Val)
 		}
 
 	}

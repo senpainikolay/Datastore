@@ -13,6 +13,6 @@ func main() {
 	r := datastore.GetRouter(conf.ServerMap)
 	log.Println(conf)
 	go datastore.RunTCPServer(conf.TcpAddr)
-	http.ListenAndServe(":"+"8080", r)
+	http.ListenAndServe(":"+conf.HttpPort, r)
 
 }
