@@ -4,6 +4,6 @@
     "leader_bool" : false, 
     "tcp_cluster_servers": { 
         "1" : "localhost:3333", 
-        "2" : "localhost:3334" 
+        "2" : "localhost:3333" 
     }
 }

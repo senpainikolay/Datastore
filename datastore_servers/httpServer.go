@@ -8,11 +8,19 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
 )
 
 var serversMap map[int]string
+
+type RoundBoutCounter struct {
+	m sync.Mutex
+	c int
+}
+
+var rbc = RoundBoutCounter{sync.Mutex{}, 1}
 
 func GetRouter(m map[int]string) *mux.Router {
 	serversMap = m
@@ -25,7 +33,7 @@ func GetRouter(m map[int]string) *mux.Router {
 func GetValue(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
-	resp := DialTCPServerOnGet(serversMap[1], key)
+	resp := DialTCPServer(serversMap[1], key, "NONE", "GET")
 	fmt.Fprint(w, resp)
 
 }
@@ -33,34 +41,32 @@ func PostValue(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
 	val := vars["value"]
-	resp := DialTCPServerOnPost(serversMap[1], key, val)
+	rbc.m.Lock()
+	if rbc.c%(len(serversMap)+1) == 0 {
+		rbc.c = 1
+	}
+	temp := rbc.c
+	rbc.c += 1
+	rbc.m.Unlock()
+	var resp string
+	for i := 0; i < int(len(serversMap)/2+1); i++ {
+		resp += DialTCPServer(serversMap[temp], key, val, "POST")
+		temp += 1
+		if temp%(len(serversMap)+1) == 0 {
+			temp = 1
+		}
+	}
 	fmt.Fprint(w, resp)
-
 }
 
-func DialTCPServerOnGet(tcp_addr string, key string) string {
+func DialTCPServer(tcp_addr string, key, val, cmd string) string {
 	conn, err := net.Dial("tcp", tcp_addr)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	msgStruct := TCPMsg{Cmd: "GET", Key: key}
+	msgStruct := TCPMsg{Cmd: cmd, Key: key, Val: val}
 	msg, _ := json.Marshal(msgStruct)
 	fmt.Fprint(conn, string(msg))
-
-	message, _ := bufio.NewReader(conn).ReadString('\n')
-	conn.Close()
-	return message
-
-}
-func DialTCPServerOnPost(tcp_addr string, key, val string) string {
-	conn, err := net.Dial("tcp", tcp_addr)
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	msgStruct := TCPMsg{Cmd: "POST", Key: key, Val: val}
-	msg, _ := json.Marshal(msgStruct)
-	fmt.Fprint(conn, string(msg))
-
 	message, _ := bufio.NewReader(conn).ReadString('\n')
 	conn.Close()
 	return message

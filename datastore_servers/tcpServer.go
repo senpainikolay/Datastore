@@ -29,13 +29,13 @@ func RunTCPServer(tcp_addr string) {
 			os.Exit(1)
 		}
 		// Handle connections in a new goroutine.
-		go handleRequest(conn)
+		go handleRequest(conn, tcp_addr)
 	}
 
 }
 
 // Handles incoming requests.
-func handleRequest(conn net.Conn) {
+func handleRequest(conn net.Conn, tcp_addr string) {
 	// we create a decoder that reads directly from the socket
 	d := json.NewDecoder(conn)
 	var msg TCPMsg
@@ -46,13 +46,14 @@ func handleRequest(conn net.Conn) {
 	var resp string
 	switch msg.Cmd {
 	case "POST":
+		log.Println("OOOKK")
 		Map.Store(msg.Key, msg.Val)
-		resp = "Succesfully saved in store"
 	case "GET":
 		storeVal, ok := Map.Load(msg.Key)
 		if ok {
 			resp = fmt.Sprint(storeVal)
 		}
+
 	}
 	conn.Write([]byte(resp))
 	conn.Close()
