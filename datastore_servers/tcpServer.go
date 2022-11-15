@@ -20,7 +20,7 @@ func RunTCPServer(tcp_addr string) {
 	}
 	// Close the listener when the application closes.
 	defer l.Close()
-	log.Printf("Listening on %v \n", tcp_addr)
+	//log.Printf("Listening on %v \n", tcp_addr)
 	for {
 		// Listen for an incoming connection.
 		conn, err := l.Accept()
@@ -66,6 +66,7 @@ func handleRequest(conn net.Conn, tcp_addr string) {
 		_, ok := Map.Load(msg.Key)
 		if ok {
 			Map.Store(msg.Key, msg.Val)
+			resp = fmt.Sprintf("Updated at %v", tcp_addr)
 		}
 
 	}

@@ -1,7 +1,8 @@
 {  
-    "http_port" : "8080", 
+    "http_port" : "8080",  
+    "http_addr" : "datastore1", 
     "tcp_address" : "datastore1:8090",  
-    "leader_bool" : false, 
+    "leader_bool" : true, 
     "tcp_cluster_servers": { 
         "1" : "datastore1:8090", 
         "2" : "datastore2:8091", 

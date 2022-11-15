@@ -10,9 +10,13 @@ import (
 func main() {
 
 	conf := GetConf()
-	r := datastore.GetRouter(conf.ServerMap)
-	log.Println(conf)
-	go datastore.RunTCPServer(conf.TcpAddr)
-	http.ListenAndServe(":"+conf.HttpPort, r)
+	if conf.LeaderBool {
+		r := datastore.GetRouter(conf.ServerMap)
+		go datastore.RunTCPServer(conf.TcpAddr)
+		log.Printf("THE LEADER IS: %v : %v ", conf.HttpAddr, conf.HttpPort)
+		http.ListenAndServe(":"+conf.HttpPort, r)
+	} else {
+		datastore.RunTCPServer(conf.TcpAddr)
+	}
 
 }
