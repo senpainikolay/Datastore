@@ -44,14 +44,15 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		resp += res
 		if res != "NOTFOUND" {
+			resp += res
 			break
 		}
 	}
 	fmt.Fprint(w, resp)
 
 }
+
 func DeleteValue(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]

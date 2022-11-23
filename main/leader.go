@@ -29,18 +29,10 @@ func AttachLeaderFeatureToHTTP() {
 	r := datastore.GetRouter(conf.ServerMap)
 	r.HandleFunc("/leaderInfo", GetLeaderInfo).Methods("GET")
 	r.HandleFunc("/dominate", DominatedFn).Methods("GET")
-	r.HandleFunc("/a", B).Methods("GET")
 	go CompeteForLeader()
 	http.ListenAndServe(":"+conf.HttpPort, r)
 }
-func B(w http.ResponseWriter, r *http.Request) {
-	leader.M.Lock()
-	resp := leader.B
-	leader.M.Unlock()
 
-	fmt.Fprint(w, resp)
-
-}
 func GetLeaderInfo(w http.ResponseWriter, r *http.Request) {
 	go func() { SleepControllerChan <- 100 }()
 	leader.M.Lock()
