@@ -2,7 +2,7 @@
     "http_port" : "8083",  
     "http_addr" : "datastore4", 
     "tcp_address" : "datastore4:8093",  
-    "tcp_cluster_servers": { 
+    "cluster_servers": { 
         "1" : "datastore1:8090", 
         "2" : "datastore2:8091", 
         "3" : "datastore3:8092", 

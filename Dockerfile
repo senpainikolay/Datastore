@@ -7,7 +7,6 @@ ARG config config
 ARG port1  
 ARG port2
 
-COPY . /app  
 
 COPY . /app  
 # Replacing the configurations folder files with needed configurations 

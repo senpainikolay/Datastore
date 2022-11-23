@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/mux"
+	datastore "github.com/senpainikolay/Datastore/datastore_servers"
 )
 
 type Leader struct {
@@ -23,11 +25,13 @@ var SleepControllerChan = make(chan int, 5)
 var LeaderConfirmationChan = make(chan int, 1)
 var LeaderChan = make(chan int, 3)
 
-func AttachLeaderFeatureToHTTP(r *mux.Router) *mux.Router {
+func AttachLeaderFeatureToHTTP() {
+	r := datastore.GetRouter(conf.ServerMap)
 	r.HandleFunc("/leaderInfo", GetLeaderInfo).Methods("GET")
 	r.HandleFunc("/dominate", DominatedFn).Methods("GET")
 	r.HandleFunc("/a", B).Methods("GET")
-	return r
+	go CompeteForLeader()
+	http.ListenAndServe(":"+conf.HttpPort, r)
 }
 func B(w http.ResponseWriter, r *http.Request) {
 	leader.M.Lock()
@@ -80,8 +84,8 @@ func CompeteForLeader() {
 				leader.M.Unlock()
 			} else {
 				go func() { LeaderChan <- 150 }()
+				go InformGatewayServer()
 				DominateOnTimeServers()
-				log.Println(conf.HttpAddr + " is the LEADER!!!")
 			}
 
 		default:
@@ -145,4 +149,19 @@ func AddTimeOnServerAddress(addr string) {
 	if err != nil {
 		return
 	}
+}
+
+func InformGatewayServer() {
+	postBody, _ := json.Marshal(map[string]string{
+		"addr": conf.HttpAddr,
+		"port": conf.HttpPort,
+	})
+	responseBody := bytes.NewBuffer(postBody)
+	resp, err := http.Post("http://gateway:8070/updateLeaderAddress", "application/json", responseBody)
+	//Handle Error
+	if err != nil {
+		log.Fatalf("An Error Occured %v", err)
+	}
+	resp.Body.Close()
+
 }

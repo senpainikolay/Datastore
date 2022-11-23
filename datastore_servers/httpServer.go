@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"sync"
@@ -33,12 +34,18 @@ func GetRouter(m map[int]string) *mux.Router {
 }
 
 func GetValue(w http.ResponseWriter, r *http.Request) {
+	log.Println("AUFF GET")
 	vars := mux.Vars(r)
 	key := vars["key"]
+
 	var resp string
 	for i := 1; i <= len(serversMap); i++ {
-		resp = DialTCPServer(serversMap[i], key, "NONE", "GET")
-		if resp != "NOTFOUND" {
+		res, err := DialTCPServer(serversMap[i], key, "NONE", "GET")
+		if err != nil {
+			continue
+		}
+		resp += res
+		if res != "NOTFOUND" {
 			break
 		}
 	}
@@ -50,18 +57,28 @@ func DeleteValue(w http.ResponseWriter, r *http.Request) {
 	key := vars["key"]
 	var resp string
 	for i := 1; i <= len(serversMap); i++ {
-		resp += DialTCPServer(serversMap[i], key, "NONE", "DELETE")
+		res, err := DialTCPServer(serversMap[i], key, "NONE", "DELETE")
+		if err != nil {
+			continue
+		}
+		resp += res
 	}
+
 	fmt.Fprint(w, resp)
 }
 
 func UpdateValue(w http.ResponseWriter, r *http.Request) {
+	log.Println("AUFFF GET")
 	vars := mux.Vars(r)
 	key := vars["key"]
 	val := vars["value"]
 	var resp string
 	for i := 1; i <= len(serversMap); i++ {
-		resp = DialTCPServer(serversMap[i], key, val, "PUT")
+		res, err := DialTCPServer(serversMap[i], key, val, "PUT")
+		if err != nil {
+			continue
+		}
+		resp = res
 	}
 	fmt.Fprint(w, resp)
 
@@ -79,7 +96,11 @@ func PostValue(w http.ResponseWriter, r *http.Request) {
 	rbc.m.Unlock()
 	var resp string
 	for i := 0; i < int(len(serversMap)/2+1); i++ {
-		resp += DialTCPServer(serversMap[temp], key, val, "POST")
+		res, err := DialTCPServer(serversMap[temp], key, val, "POST")
+		if err != nil {
+			continue
+		}
+		resp += res
 		temp += 1
 		if temp%(len(serversMap)+1) == 0 {
 			temp = 1
@@ -88,16 +109,16 @@ func PostValue(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, resp)
 }
 
-func DialTCPServer(tcp_addr string, key, val, cmd string) string {
+func DialTCPServer(tcp_addr string, key, val, cmd string) (string, error) {
 	conn, err := net.Dial("tcp", tcp_addr)
 	if err != nil {
-		fmt.Println("error:", err)
+		return "", err
 	}
 	msgStruct := TCPMsg{Cmd: cmd, Key: key, Val: val}
 	msg, _ := json.Marshal(msgStruct)
 	fmt.Fprint(conn, string(msg))
 	message, _ := bufio.NewReader(conn).ReadString('\n')
 	conn.Close()
-	return message
+	return message, nil
 
 }

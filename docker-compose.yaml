@@ -42,7 +42,8 @@ services:
           port2: 8093
     ports:
       - "8083:8083"  
-      - "8093:8093"
+      - "8093:8093" 
 networks:
   default:
     name: datastore
+    external: true
