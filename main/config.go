@@ -8,11 +8,11 @@ import (
 )
 
 type Conf struct {
-	HttpPort   string         `json:"http_port"`
-	HttpAddr   string         `json:"http_addr"`
-	TcpAddr    string         `json:"tcp_address"`
-	LeaderBool bool           `json:"leader_bool"`
-	ServerMap  map[int]string `json:"tcp_cluster_servers"`
+	HttpPort      string         `json:"http_port"`
+	HttpAddr      string         `json:"http_addr"`
+	TcpAddr       string         `json:"tcp_address"`
+	ServerMap     map[int]string `json:"cluster_servers"`
+	HttpServerMap map[int]string `json:"http_servers"`
 }
 
 func GetConf() *Conf {

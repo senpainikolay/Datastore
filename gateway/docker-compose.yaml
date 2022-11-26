@@ -1,0 +1,12 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile 
+      args:
+          port: 8070
+    ports:
+      - "8070:8070"  
+networks:
+  default:
+    name: datastore
