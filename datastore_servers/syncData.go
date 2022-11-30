@@ -21,12 +21,18 @@ func SyncTemporarily(clusterServers map[int]string) {
 		tempMap := MapM.Map
 		MapM.M.Unlock()
 		for key, _ := range tempMap {
+			// List of Responses from UDP : Servers that have the actual Key
 			var resHave [][]string
+			// List of Responses from UDP : Servers that DO NOT have the actual Key
 			var resLack [][]string
 			for i := 2; i <= len(clusterServers); i++ {
 				resString := DialUDP(clusterServers[i], key)
+				// if server not dead
 				if resString != "" {
 					resSlice := strings.Split(resString, " ")
+					// [0] : Bool: have key/do not have key
+					// [1] : Lenght of the Database Map.
+					// [2] : The addreass
 					if resSlice[0] == "1" {
 						resHave = append(resHave, resSlice)
 					} else {
@@ -35,17 +41,18 @@ func SyncTemporarily(clusterServers map[int]string) {
 
 				}
 			}
-			// 2+1  : +       1: -
 
-			// filter the servers
 			log.Println(len(resHave))
 			log.Println(resLack)
+			// filter the servers
 			for {
+				// Other servers that have that key +  +1:actual server.
 				if len(resHave)+1 > len(resLack) || len(resLack) == 1 {
 					break
 				}
 				var tempMinMapLen = 9999
 				var idx = 0
+				// Select server with smallest Map and adding/completing Data loss on server restart. ( in a while )
 				for i, item := range resLack {
 					intLen, _ := strconv.Atoi(item[1])
 					if intLen < tempMinMapLen {
@@ -53,7 +60,6 @@ func SyncTemporarily(clusterServers map[int]string) {
 						idx = i
 					}
 				}
-				log.Println(resLack[idx][2])
 				syncRes, _ := DialTCPServer(resLack[idx][2], key, tempMap[key], "POST")
 				log.Printf("Syncronizing %v  with key %v  and the response: %s \n", resLack[idx][2], key, syncRes)
 				resLack = removeElemByIndex(resLack, idx)
