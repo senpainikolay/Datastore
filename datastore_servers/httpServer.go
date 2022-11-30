@@ -34,7 +34,6 @@ func GetRouter(m map[int]string) *mux.Router {
 }
 
 func GetValue(w http.ResponseWriter, r *http.Request) {
-	log.Println("AUFF GET")
 	vars := mux.Vars(r)
 	key := vars["key"]
 
@@ -45,7 +44,7 @@ func GetValue(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		if res != "NOTFOUND" {
-			resp += res
+			resp = res
 			break
 		}
 	}
