@@ -20,46 +20,43 @@ func SyncTemporarily(clusterServers map[int]string) {
 		MapM.M.Lock()
 		tempMap := MapM.Map
 		MapM.M.Unlock()
-
 		for key, _ := range tempMap {
-			var res [][]string
-			var deadServers = 0
-			for i := 1; i <= len(clusterServers); i++ {
+			var resHave [][]string
+			var resLack [][]string
+			for i := 2; i <= len(clusterServers); i++ {
 				resString := DialUDP(clusterServers[i], key)
 				if resString != "" {
 					resSlice := strings.Split(resString, " ")
-					res = append(res, resSlice)
-
-				} else {
-					deadServers += 1
+					if resSlice[0] == "1" {
+						resHave = append(resHave, resSlice)
+					} else {
+						resLack = append(resLack, resSlice)
+					}
 
 				}
 			}
-			// 2+1 -deadServers :1have       1:0no
-
-			log.Println(res)
+			// 2+1  : +       1: -
 
 			// filter the servers
+			log.Println(len(resHave))
+			log.Println(resLack)
 			for {
-				if deadServers == len(clusterServers)-1 || len(res) <= int((len(clusterServers)-deadServers-1)/2) {
+				if len(resHave)+1 > len(resLack) || len(resLack) == 1 {
 					break
 				}
-				var tempMinMapLen = 0
+				var tempMinMapLen = 9999
 				var idx = 0
-				for i, item := range res {
+				for i, item := range resLack {
 					intLen, _ := strconv.Atoi(item[1])
-					if intLen > tempMinMapLen {
+					if intLen < tempMinMapLen {
 						tempMinMapLen = intLen
 						idx = i
 					}
 				}
-				res = removeElemByIndex(res, idx)
-			}
-			// Updating those servers with data.
-			for _, item := range res {
-				val := tempMap[key]
-				syncRes, _ := DialTCPServer(item[2], key, val, "POST")
-				log.Printf("Synconized  %v  with key %v  and the response: %s \n", item[2], key, syncRes)
+				log.Println(resLack[idx][2])
+				syncRes, _ := DialTCPServer(resLack[idx][2], key, tempMap[key], "POST")
+				log.Printf("Syncronizing %v  with key %v  and the response: %s \n", resLack[idx][2], key, syncRes)
+				resLack = removeElemByIndex(resLack, idx)
 			}
 		}
 	}

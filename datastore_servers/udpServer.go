@@ -2,7 +2,6 @@ package datastore
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -45,7 +44,6 @@ func RunUDPServer(port string, dsAddr string) {
 		MapM.M.Lock()
 		_, ok := MapM.Map[keyMap]
 		MapM.M.Unlock()
-		log.Println(ok)
 		if ok {
 			found = 1
 		}
