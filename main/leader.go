@@ -145,7 +145,7 @@ func AddTimeOnServerAddress(addr string) {
 
 func InformGatewayServer() {
 	postBody, _ := json.Marshal(map[string]string{
-		"addr": conf.HttpAddr,
+		"addr": conf.Addr,
 		"port": conf.HttpPort,
 	})
 	responseBody := bytes.NewBuffer(postBody)

@@ -9,8 +9,8 @@ import (
 
 type Conf struct {
 	HttpPort      string         `json:"http_port"`
-	HttpAddr      string         `json:"http_addr"`
-	TcpAddr       string         `json:"tcp_address"`
+	Addr          string         `json:"addr"`
+	TcpPort       string         `json:"tcp_port"`
 	ServerMap     map[int]string `json:"cluster_servers"`
 	HttpServerMap map[int]string `json:"http_servers"`
 }

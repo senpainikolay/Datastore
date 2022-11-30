@@ -6,10 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 )
-
-var Map sync.Map
 
 func RunTCPServer(tcp_addr string) {
 	// Listen for incoming connections.
@@ -46,26 +43,50 @@ func handleRequest(conn net.Conn, tcp_addr string) {
 	var resp string
 	switch msg.Cmd {
 	case "POST":
-		Map.Store(msg.Key, msg.Val)
+		MapM.M.Lock()
+		MapM.Map[msg.Key] = msg.Val
+		MapM.M.Unlock()
+		go func() {
+			MapLenCounter.M.Lock()
+			MapLenCounter.C += 1
+			MapLenCounter.M.Unlock()
+		}()
+
 		resp = fmt.Sprintf("Added/Posted at %v", tcp_addr)
 
 	case "GET":
-		storeVal, ok := Map.Load(msg.Key)
+		MapM.M.Lock()
+		storeVal, ok := MapM.Map[msg.Key]
+		MapM.M.Unlock()
 		if ok {
 			resp = fmt.Sprint(storeVal)
 		} else {
 			resp = "NOTFOUND"
 		}
 	case "DELETE":
-		_, ok := Map.Load(msg.Key)
+		MapM.M.Lock()
+		_, ok := MapM.Map[msg.Key]
+		MapM.M.Unlock()
 		if ok {
-			Map.Delete(msg.Key)
+			MapM.M.Lock()
+			delete(MapM.Map, msg.Key)
+			MapM.M.Unlock()
+			go func() {
+				MapLenCounter.M.Lock()
+				MapLenCounter.C -= 1
+				MapLenCounter.M.Unlock()
+			}()
 			resp = fmt.Sprintf("Deleted at %v", tcp_addr)
 		}
 	case "PUT":
-		_, ok := Map.Load(msg.Key)
+		MapM.M.Lock()
+		_, ok := MapM.Map[msg.Key]
+		MapM.M.Unlock()
+
 		if ok {
-			Map.Store(msg.Key, msg.Val)
+			MapM.M.Lock()
+			MapM.Map[msg.Key] = msg.Val
+			MapM.M.Unlock()
 			resp = fmt.Sprintf("Updated at %v", tcp_addr)
 		}
 
